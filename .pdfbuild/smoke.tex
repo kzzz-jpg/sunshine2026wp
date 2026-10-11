@@ -1,0 +1,302 @@
+%=============================================================================
+%  Sunshine CTF 2025 pwn write-up — XeLaTeX template
+%=============================================================================
+\documentclass[10pt,a4paper]{article}
+
+% ---------- 版面幾何 ----------
+\usepackage[top=2.1cm,bottom=1.9cm,left=1.7cm,right=1.7cm,headsep=0.45cm,footskip=0.95cm]{geometry}
+
+% ---------- 字型（XeLaTeX + xeCJK）----------
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Sans CJK TC}
+\setCJKsansfont{Noto Sans CJK TC}
+\setCJKmonofont{Noto Sans Mono CJK TC}
+\setmainfont{Noto Sans CJK TC}
+\setsansfont{Noto Sans CJK TC}
+\setmonofont[Scale=0.78]{Noto Sans Mono CJK TC}
+
+% 中文斷行與標點
+\xeCJKsetup{
+  CheckSingle = false,
+  CJKecglue = {\hskip 0.06em plus 0.02em},
+}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\linespread{1.13}
+
+% ---------- 顏色 ----------
+\usepackage{xcolor}
+\definecolor{dshblue}{HTML}{1F4E79}
+\definecolor{dshcyan}{HTML}{1B6B7A}
+\definecolor{dshgray}{HTML}{555555}
+\definecolor{dshrule}{HTML}{B8C4D0}
+\definecolor{codebg}{HTML}{F6F7F9}
+\definecolor{codeframe}{HTML}{D8DEE6}
+\definecolor{linkblue}{HTML}{0B5FA5}
+\definecolor{quotebar}{HTML}{5B8DB8}
+
+% ---------- 表格 ----------
+\usepackage{longtable,booktabs,array}
+\usepackage{etoolbox}
+\renewcommand{\arraystretch}{1.28}
+\setlength{\tabcolsep}{5pt}
+\AtBeginEnvironment{longtable}{\small}
+\AtBeginEnvironment{tabular}{\small}
+\setlength{\LTpre}{0.7em}
+\setlength{\LTpost}{0.7em}
+
+% ---------- 程式碼區塊 ----------
+\usepackage{fvextra}
+\fvset{
+  fontsize=\fontsize{7.1}{8.6}\selectfont,
+  breaklines=true,
+  breakanywhere=true,
+  breakautoindent=false,
+  frame=none,
+  numbers=none,
+  samepage=false,
+}
+\usepackage{framed}
+\colorlet{shadecolor}{codebg}
+
+% pandoc 產生的程式碼高亮巨集（必須先載入，才會定義 Shaded）
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+
+\renewenvironment{Shaded}{%
+  \def\FrameCommand{\fboxsep=3.2pt\colorbox{shadecolor}}%
+  \MakeFramed{\advance\hsize-\width\FrameRestore\small}%
+}{%
+  \endMakeFramed
+}
+
+% ---------- 標題樣式 ----------
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\Large\bfseries\color{dshblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{dshcyan}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{dshgray}}{\thesubsubsection}{0.6em}{}
+\titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries}{}{0em}{}[~]
+\titlespacing*{\section}{0pt}{1.6em}{0.55em}
+\titlespacing*{\subsection}{0pt}{1.15em}{0.4em}
+\titlespacing*{\subsubsection}{0pt}{0.9em}{0.3em}
+
+% ---------- 頁眉頁腳 ----------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{dshgray}Sunshine CTF 2025 — pwn 全 7 題 Write-up}
+\fancyhead[R]{\footnotesize\color{dshgray}\leftmark}
+\fancyfoot[C]{\footnotesize\color{dshgray}\thepage}
+\renewcommand{\headrulewidth}{0.35pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{dshrule}\leaders\hrule height \headrulewidth\hfill}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\footnotesize\color{dshgray}\thepage}\renewcommand{\headrulewidth}{0pt}}
+% 讓 \section 更新頁眉
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
+% ---------- 引言區塊 ----------
+\usepackage{mdframed}
+\renewenvironment{quote}{%
+  \begin{mdframed}[linewidth=0pt,innerleftmargin=0pt,innerrightmargin=0pt,
+    innerbottommargin=0pt,innertopmargin=0pt,skipabove=0.55em,skipbelow=0.55em,
+    leftmargin=0.9em,rightmargin=0.4em,startcode={\color{quotebar}\vrule width 2.6pt},%
+    endcode={}]%
+  \itshape\color{black}%
+}{%
+  \end{mdframed}%
+}
+
+% ---------- 清單 ----------
+\usepackage{enumitem}
+\setlist[itemize]{topsep=0.28em,itemsep=0.12em,parsep=0.1em,leftmargin=1.5em}
+\setlist[enumerate]{topsep=0.28em,itemsep=0.12em,parsep=0.1em,leftmargin=1.7em}
+
+% ---------- 連結 ----------
+\usepackage[hidelinks,bookmarks=true,bookmarksnumbered=true]{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=linkblue,
+  urlcolor=linkblue,
+  citecolor=linkblue,
+  pdftitle={},
+  pdfauthor={Sunshine CTF 2025 pwn write-up},
+  pdfsubject={CTF pwn write-up},
+  pdfcreator={pandoc + XeLaTeX},
+  bookmarksopen=true,
+  bookmarksopenlevel=1,
+  breaklinks=true,
+}
+
+% ---------- 破折號、省略號等 ----------
+\usepackage{amssymb}
+
+
+% ---------- 標題 ----------
+\title{\vspace{-1.2cm}\Huge\bfseries\color{dshblue} Sunshine CTF 2025\\[0.25em] pwn 全 7 題完整 Write-up\\[0.35em]
+       \large\normalfont\color{dshgray} 從零開始：組語、漏洞成因、exploit 逐行解說}
+\author{\normalsize 全部 7 題皆已對遠端 \texttt{chal.sunshinectf.games} 實打取得真實 flag}
+\date{\normalsize\today}
+
+\begin{document}
+\sloppy
+\emergencystretch=2.5em
+
+{\hypersetup{linkcolor=dshblue}
+\maketitle
+\thispagestyle{plain}
+
+\begin{center}
+\begin{minipage}{0.9\textwidth}
+\small\itshape\color{dshgray}
+本文件是把 \texttt{wp/} 底下的教學文件合併成的單一 PDF。
+每一題都包含：漏洞成因、逐行組合語言解說、ASCII 記憶體圖、gdb 實測輸出、
+以及完整可執行的 \texttt{exploit.py} 逐行註解。
+\end{minipage}
+\end{center}
+
+\vspace{0.6em}
+\hrule height 0.4pt
+\vspace{0.4em}
+
+\renewcommand{\contentsname}{目錄}
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+\clearpage
+}
+
+\section{測試文件：CJK
+排版驗證}\label{ux6e2cux8a66ux6587ux4ef6cjk-ux6392ux7248ux9a57ux8b49}
+
+\subsection{一、段落與行內程式碼}\label{ux4e00ux6bb5ux843dux8207ux884cux5167ux7a0bux5f0fux78bc}
+
+這是一段繁體中文測試，包含行內程式碼 \texttt{pop\ rdi;\ ret}、運算子 → ⇒
+≥ ≤ ≠、星號 ★ ☆、 以及符號 ✔ ✗ ① ②
+③。英文與中文混排應該要正確斷行，不應該出現方框或亂碼。
+
+\begin{quote}
+⚠️ 注意：這是一段引言區塊，用來測試引言樣式是否正確。
+\end{quote}
+
+\subsection{二、表格}\label{ux4e8cux8868ux683c}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+位址 & 指令 & 說明 \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{0x401069} & \texttt{syscall;\ ret} & 我們使用的
+gadget（本題有兩個） \\
+\texttt{0x40104c} & \texttt{syscall;\ ret} & leak 函式裡的，同樣可用 \\
+\end{longtable}
+}
+
+\subsection{三、ASCII
+圖表（含中文與製表符號）}\label{ux4e09ascii-ux5716ux8868ux542bux4e2dux6587ux8207ux88fdux8868ux7b26ux865f}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{   高位址}
+\NormalTok{   ┌──────────────────────────────┐}
+\NormalTok{   │  return address（8 bytes）    │  ← 我們要覆寫的目標}
+\NormalTok{   ├──────────────────────────────┤}
+\NormalTok{   │  saved rbp（8 bytes）        │}
+\NormalTok{   ├──────────────────────────────┤}
+\NormalTok{   │  canary（8 bytes）           │  ← 最靠近 rbp，最先被撞到}
+\NormalTok{   ├──────────────────────────────┤}
+\NormalTok{   │  buf[0x30]                   │  ← rbp{-}0x40}
+\NormalTok{   └──────────────────────────────┘}
+\NormalTok{   低位址}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{四、程式碼區塊}\label{ux56dbux7a0bux5f0fux78bcux5340ux584a}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ pwn }\ImportTok{import} \OperatorTok{*}
+\NormalTok{context.arch }\OperatorTok{=} \StringTok{\textquotesingle{}amd64\textquotesingle{}}
+\NormalTok{p }\OperatorTok{=}\NormalTok{ process(}\StringTok{\textquotesingle{}./chal\textquotesingle{}}\NormalTok{)}
+\NormalTok{payload  }\OperatorTok{=} \StringTok{b\textquotesingle{}A\textquotesingle{}} \OperatorTok{*} \BaseNTok{0x38} \OperatorTok{+}\NormalTok{ p64(canary) }\OperatorTok{+}\NormalTok{ p64(}\DecValTok{0}\NormalTok{) }\OperatorTok{+}\NormalTok{ p64(pop\_rdi) }\OperatorTok{+}\NormalTok{ p64(binsh) }\OperatorTok{+}\NormalTok{ p64(system)}
+\NormalTok{p.sendline(payload)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}這一行很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長\textquotesingle{}}\NormalTok{)  }\CommentTok{\# 測試過長行的換行行為}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{五、清單}\label{ux4e94ux6e05ux55ae}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  第一項
+\item
+  第二項
+
+  \begin{itemize}
+  \tightlist
+  \item
+    巢狀項目
+  \item
+    另一個巢狀項目
+  \end{itemize}
+\item
+  第三項
+\end{enumerate}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+項目 & 狀態 \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+CJK 正文 & ✔ \\
+等寬 CJK & ✔ \\
+製表符號 & ✔ \\
+\end{longtable}
+}
+
+\end{document}

@@ -1,0 +1,30 @@
+SUNSHINE CTF "revolution" (pwn3) - KEY FACTS (all objdump/gdb verified)
+FLAG: sun{cust0m_fmtstr_n0_t00ls_4ll0wed}   (4/4 remote runs)
+Binary ./revolution sha256 918483831ef0b27d0cfb8afa9e0341f38d0a296931ccc5f73ef80f5d610f8fa5
+Prot: non-PIE 0x400000, NX on, Partial RELRO (.got.plt 0x404000+ writable), NO canary, stripped.
+The code in the task hint is WRONG (no .bss 0x4060 memcpy/16-bit bug; binary imports no memcpy).
+1) Hand-written format VM (not glibc printf), specifiers:
+   %N$s -> write(1,arg[N],strlen(arg[N]))   ARBITRARY READ (NUL-terminated)
+   %N$p / %N$x -> "0x"+16 hex of arg[N]     %N$w -> *(u64*)arg[N]=arg[N+1]; prints "ok"
+   %N$w = ARBITRARY 8-BYTE WRITE, no validation; values may contain 0x00 if placed after the
+   format string's NUL ("%14$w\0" + pad to 0x40 + [dest][value]).
+2) ROOT CAUSE: printf@0x401330 sets va_list.overflow_arg_area = rsp+0x120; its frame is exactly
+   0x120 below main's rsp, so gdb confirms overflow_arg_area == main's input buffer buf, i.e.
+   arg[N>=6] == *(u64*)(buf+8*(N-6)) -> attacker controls pointer AND value of "varargs".
+   read(0,buf,0x1ff) into a 0x200 frame cannot reach saved RIP -> no ROP/overflow needed.
+3) Remote libc = Ubuntu 24.04 libc6 2.39-0ubuntu8/.1/.2/.3 (identical offsets), identified by
+   ASLR-independent deltas: read-setvbuf 0x93510, write-setvbuf 0x94020, stdout-setvbuf 0x17c080.
+   Offsets: setvbuf 0x88540, system 0x58740, read 0x11ba50, write 0x11c560,
+   _IO_2_1_stdout_ 0x2045c0, _IO_2_1_stderr_ 0x2044e0.
+   WARNING: strlen/strcspn are IFUNCs -> GOT holds the selected impl (__strcspn_avx2), never use
+   them for fingerprinting. Local Arch libc differs: setvbuf 0x843f0, system 0x54580.
+4) EXPLOIT: leak [0x404020] (setvbuf@got, resolved at startup) -> base = v-0x88540 (verify with
+   [0x404040]-base==0x2045c0) -> write system into strcspn@got 0x404010 -> main then calls
+   system(buf,"\n") on our next line => every line becomes /bin/sh -c.
+5) Only ONE command line works: system() returns int, glibc leaves garbage in upper rax, then main
+   runs `mov BYTE [rsp+rax],0` -> SIGSEGV. Control test: hooking strcspn->read() (clean 64-bit
+   return) survives many lines; strcspn->system dies right after the first command. Send everything
+   in ONE sh -c line (exploit does: cat flag.txt /flag ...; ls -la; id; echo DONE).
+6) pwntools eats bare uppercase argv words -> capture sys.argv BEFORE `from pwn import *`.
+7) Files: exploit.py (`python3 exploit.py` local, `python3 exploit.py REMOTE`), FLAG.txt, notes.md
+   (Traditional-Chinese beginner notes), NOTES_SUMMARY.txt, rev.asm, *_run.log, libc-2.39-*.so.6.

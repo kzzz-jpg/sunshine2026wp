@@ -1,0 +1,17 @@
+[x] Opening connection to chal.sunshinectf.games on port 26008
+[x] Opening connection to chal.sunshinectf.games on port 26008: Trying 35.211.211.18
+[+] Opening connection to chal.sunshinectf.games on port 26008: Done
+[+] canary    = 0x85d73c427a3f6f00
+[+] saved rbp = 0x7ffd24b3f930
+[+] PIE base  = 0x5a9450864000
+[+] shell should be up, sending commands
+sun{the_future_is_now_today_well_wait_how_are_you_reading_this}
+total 12
+drwxr-xr-x 2 root root      4096 Sep 26 00:54 .
+drwxr-xr-x 1 root root      4096 Sep 26 00:55 ..
+-rw-r----- 1 root homemaker   64 Sep 26 00:54 flag.txt
+uid=1337(homemaker) gid=1337(homemaker) groups=1337(homemaker)
+DONE
+
+FLAG: sun{the_future_is_now_today_well_wait_how_are_you_reading_this}
+[*] Closed connection to chal.sunshinectf.games port 26008

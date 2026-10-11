@@ -1,0 +1,30 @@
+SunshineCTF pwn6 "code_breaker" - key facts
+===========================================
+BINARY: PIE/stripped, canary, NX, Partial RELRO, CET note (IBT/SHSTK, not enforced).
+  bundled libc = Ubuntu GLIBC 2.39 (tcache + safe-linking + random tcache_key).
+  main=0x11c0, entry=0x12a0. RUN: ./ld-linux-x86-64.so.2 --library-path . ./code_breaker
+  (never run directly: system ld + bundled libc => __nptl_change_stack_perm error).
+PROTOCOL (fully reversed; details in notes.md):
+  handshake: srv-> 01||Ns(16B /dev/urandom); us-> 02||Nc; K[16] from Ns+Nc (4 mixing
+  rounds); us-> 03||MAC, MAC[i]=S[K[i]]^K[(i+5)&0xf]; srv-> 04 00.
+  then: 2-byte BIG-ENDIAN len + payload, XOR keystream(C,i)=S[(C+i+K[i&0xf])&0xff],
+  C = per-direction absolute counter (recv starts 17, send starts 2).
+  S-box = file offset 0x2040. cmds: 0x10 alloc,0x11 read,0x12 write,0x13 free,
+  0x14 clone,0x15 call [0x40c0](our string),0x16 dump .bss 0x40c0 => PIE leak.
+VULN: cmd 0x14 (0x1e5e) shares slotB.ptr into slotA but sets slotA.refcount=1 and only
+  slotB.refcount++ => separate counters. cmd 0x13 free (0x1ae8) calls free(ptr) FIRST and
+  nulls the slot only when its own refcount hits 0 => dangling ptr + second free(P)
+  = double free / UAF read / UAF write. Double-free check (e->key==tcache_key) bypassed by
+  zeroing the freed chunk's next/key with the UAF write (cmd 0x12).
+NOT the vuln (verified): cmd 0x15 memcpy_chk n<=0xfff vs destlen 0x1000; recv caps len at
+  0x1000; cmd 0x10/0x12 bounded by slot.size; /dev/urandom fread IS checked (==0x10).
+CHAIN: 0x16 leak PIE ([0x40c0]=PIE+0x1390) -> alloc(0,0x80);clone(1<-0);free(0);
+  write(0,zeros);free(1) -> 0x11 UAF read gives P^(P>>12) => recover heap P ->
+  write(0,p64((PIE+0x40c0)^(P>>12))) -> alloc twice: 2nd returns PIE+0x40c0, memcpy writes
+  system@plt there -> cmd 0x15 with the shell command line => RCE. No ROP chain needed.
+FLAG: sun{cr4ck_tHe_ciPh3r_fr33_thE_heaP}
+REPRO: cd /home/kzzz/Documents/code/ctf/sunshine/pwn6 && python3 exploit.py REMOTE
+TRAPS: p16(x,'big') positional arg is NOT endianness (use endian='big'); `from pwn import *`
+  strips REMOTE from sys.argv (use args['REMOTE']); cmd 0x11 reply header is
+  [0x11][0x00][size_be16][data]; interactive /bin/sh flaky -> give system() the whole
+  command line. FILES: exploit.py, FLAG.txt, notes.md (zh-TW), NOTES_SUMMARY.txt.

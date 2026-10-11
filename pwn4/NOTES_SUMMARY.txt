@@ -1,0 +1,29 @@
+SunShineCTF 2025 pwn4 "cache_money" - SOLVED
+FLAG: sun{s4fe_l1nk1ng_w0nt_s4ve_y0ur_tc4che}  (FLAG.txt, verified twice)
+TARGET: chal.sunshinectf.games:26004 | ./cache_money non-PIE/stripped
+PROTECT: non-PIE, canary, NX, Partial RELRO (GOT writable), ASLR
+LIBC: Ubuntu 24.04 glibc 2.39 (copied from ../pwn2 to match remote);
+      system +0x58740, &main_arena.bins[0] +0x203b20, strtol +0x543c0
+VULN (Transfer 0x401a10): 401ac9 free(src->ledger); 401ae8 dst->ledger =
+      that freed pointer while dst stays active => UAF read/write + double free
+STRUCTS: wallet=calloc(1,0x30): name[16]/+0x10 balance/+0x18 ledger ptr/
+      +0x20 size/+0x28 active; slots[16]@0x4040c0; strtol@got=0x404040;
+      ledger size 0x20..0x100 (default 0x80)
+CHAIN: (1) 7 closes fill tcache[0x90], transfer(0,1) frees 8th -> unsorted bin,
+      UAF Withdraw(1) leaks main_arena.bins[0] => libc = leak-0x203b20
+      (2) transfer(2,3) on 0x20 wallet, UAF Withdraw(3) of an empty tcache bin
+      leaks next = chunk>>12 = safe-linking key (no raw heap addr needed)
+      (3) Deposit(3,zeros) clears tcache key; transfer(3,4)=silent double free
+      (4) Deposit(4, p64(key^0x4040c0)+p64(0)*3) poisons e->next; open P3 pops e,
+      open P4 => malloc(0x20) returns 0x4040c0 (slots table, stored in slot 6)
+      (5) Deposit(6,{GOT,0x70,0x4040a8,0}) => fake wallet @0x4040a8 gives
+      arbitrary R/W through slot 2
+      (6) Deposit(2,p64(system)) sets strtol@got=system; menu's strtol(buf) then
+      runs system(buf); send "/bin/sh" -> shell -> cat flag.txt
+BIGGEST PITFALL: Deposit uses raw read(0,..) while the menu uses fgets(); stdio
+      read-ahead swallows pipelined payloads, so every Deposit payload and the
+      "/bin/sh" line must be sent only after its prompt. Also: remote kills the
+      connection at ~30 s (batch the sends); tcache max 7 and Open() drains it;
+      tcache counts are uint16 in 2.30+; no __free_hook/__malloc_hook in 2.39.
+RUN: python3 exploit.py  (local) | python3 exploit.py REMOTE (writes FLAG.txt)
+FILES: exploit.py, FLAG.txt, notes.md (繁中教學筆記), NOTES_SUMMARY.txt, dis.txt
